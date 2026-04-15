@@ -18,7 +18,7 @@ public class Main {
         }
 
         // exibição dos nomes
-        System.out.println("\nNomes digitados:");
+        System.out.println("Nomes digitados:");
 
         for (int i = 0; i < 2; i++) { // percorre as linhas
             for (int j = 0; j < 3; j++) { // percorre as colunas
