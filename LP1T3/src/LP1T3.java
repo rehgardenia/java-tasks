@@ -3,7 +3,7 @@ package lp1t3;
 
 /**
  *
- * @author Renata Gardenia
+ * @author Renata Gardenia e Giovanna Ferreira
  */
 public class LP1T3 {
 
