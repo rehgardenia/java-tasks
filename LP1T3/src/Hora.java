@@ -1,4 +1,6 @@
-
+/*
+    Realizado por Renata Gardenia e Giovanna Ferreira
+*/
 package lp1t3;
 
 import java.util.Scanner;
