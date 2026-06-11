@@ -89,7 +89,7 @@ public class Hora {
     
     public String getHora1(){
         //hh:mm:ss;
-         return String.format("%02d:%02d:%02d", hora, min, seg);
+         return String.format("c", hora, min, seg);
     }
     public String getHora2(){
         //hh:mm:ss (AM/PM);
