@@ -1,7 +1,7 @@
 /******************************************************************************
 TRABALHO PRATICO 04 - LPR1
 
-@AUTHOR: RENATA GARDENIA 
+@AUTHOR: RENATA GARDENIA  E GIOVANNA FERREIRA
 *******************************************************************************/
 //Exercicio 01
 
