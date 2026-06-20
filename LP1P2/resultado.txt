@@ -1,0 +1,19 @@
+
+--- p1 ---
+Paciente : João Silva
+Medico   : Dr. Carlos
+Data     : 15/06/2025
+Hora     : 14:30:00
+
+--- p2 ---
+Paciente : oi
+Medico   : oii
+Data     : 20/10/2026
+Hora     : 12:05:25
+
+--- p1 (atualizado) ---
+Paciente : Joazinho
+Medico   : Leonardo
+Data     : 12/12/2012
+Hora     : 22:30:02
+Total de consultas agendadas: 2
