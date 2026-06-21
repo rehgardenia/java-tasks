@@ -1,18 +1,23 @@
-## Getting Started
+# Trabalho Prático – LP1P2
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+## Descrição
 
-## Folder Structure
+Projeto desenvolvido em Java para o Trabalho Prático da disciplina de Linguagem de Programação.
 
-The workspace contains two folders by default, where:
+O sistema realiza o agendamento de consultas médicas utilizando as classes `Data`, `Hora` e `ConsultaAgendada`.
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## Funcionalidades
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+* Cadastro de consultas agendadas.
+* Armazenamento de data e hora da consulta.
+* Cadastro do nome do paciente e do médico.
+* Alteração dos dados da consulta através de métodos setters.
+* Contagem da quantidade total de consultas criadas.
+* Geração de arquivo texto com os resultados da execução.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+## Vídeo do código funcionando:
+https://drive.google.com/file/d/1qdU30u8vJZRQFVXngf-lFJXcHdg7PKff/view?usp=sharing
 
-## Dependency Management
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+
+
