@@ -1,4 +1,4 @@
-# Trabalho Prático – LP1P2
+# Prova 2 – LP1P2
 
 ## Descrição
 
