@@ -1,9 +1,6 @@
 
 package EX2;
 
-import EX1.*;
-
-
 public class Author {
     private String name;
     private String email;
