@@ -1,209 +1,185 @@
-package LPR2T4;
 
 import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
+import java.util.Locale;
 
 public class TrabalhoPratico04 extends JFrame {
-    // Componentes da Interface
-    private JTextField txtPesquisa;
+
+    private JTextField txtPesquisaNome;
+    private JButton btnPesquisar;
     private JTextField txtNome;
     private JTextField txtSalario;
     private JTextField txtCargo;
-    private JButton btnPesquisar, btnAnterior, btnProximo;
+    private JButton btnAnterior;
+    private JButton btnProximo;
 
-    // Gerenciamento de Dados / JDBC
-    private Connection conexao;
+    // Objetos JDBC
+    private Connection con;
+    private PreparedStatement pstmt;
     private ResultSet rs;
 
     public TrabalhoPratico04() {
-        super("TRABALHO PRATICO 04");
-        JPanel principal = new JPanel(new BorderLayout(0, 16));
-        principal.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        setContentPane(principal);
+        setTitle("TRABALHO PRATICO 04");
+        setSize(420, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(5, 5));
 
-        JPanel pesquisa = new JPanel(new BorderLayout(8, 8));
-        pesquisa.setBorder(BorderFactory.createTitledBorder("Pesquisa"));
-        JPanel dados = new JPanel(new GridBagLayout());
-        dados.setBorder(BorderFactory.createTitledBorder("Dados do funcionário"));
-        JPanel navegacao = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        JPanel cabecalho = new JPanel(new BorderLayout(0, 12));
-        JLabel titulo = new JLabel("Consulta de funcionários");
-        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 20f));
-        cabecalho.add(titulo, BorderLayout.NORTH);
-        cabecalho.add(pesquisa, BorderLayout.CENTER);
-        principal.add(cabecalho, BorderLayout.NORTH);
-        principal.add(dados, BorderLayout.CENTER);
-        principal.add(navegacao, BorderLayout.SOUTH);
+        // --- PAINEL SUPERIOR (Pesquisa) ---
+        JPanel painelTopo = new JPanel(new GridLayout(2, 1, 5, 5));
+        
+        JPanel linhaBusca = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        linhaBusca.add(new JLabel("Nome:"));
+        txtPesquisaNome = new JTextField(22);
+        linhaBusca.add(txtPesquisaNome);
 
-        // --- Painel de Pesquisa ---
-        JLabel rotuloPesquisa = new JLabel("Nome do funcionário:");
-        pesquisa.add(rotuloPesquisa, BorderLayout.NORTH);
-        txtPesquisa = new JTextField(15);
-        rotuloPesquisa.setLabelFor(txtPesquisa);
-        pesquisa.add(txtPesquisa, BorderLayout.CENTER);
-
+        JPanel linhaBotao = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
         btnPesquisar = new JButton("Pesquisar");
-        pesquisa.add(btnPesquisar, BorderLayout.EAST);
-        getRootPane().setDefaultButton(btnPesquisar);
+        linhaBotao.add(btnPesquisar);
 
-        // --- Painel de Exibição dos Dados ---
-        txtNome = new JTextField(20);
-        txtNome.setEditable(false);
-        adicionarCampo(dados, "Nome:", txtNome, 0);
+        painelTopo.add(linhaBusca);
+        painelTopo.add(linhaBotao);
+        add(painelTopo, BorderLayout.NORTH);
 
-        txtSalario = new JTextField(20);
-        txtSalario.setEditable(false);
-        adicionarCampo(dados, "Salário (R$):", txtSalario, 1);
+        // --- PAINEL CENTRAL E INFERIOR (Dados e Navegação) ---
+        JPanel painelDados = new JPanel(new GridLayout(4, 2, 2, 2));
 
-        txtCargo = new JTextField(20);
-        txtCargo.setEditable(false);
-        adicionarCampo(dados, "Cargo:", txtCargo, 2);
+        painelDados.add(new JLabel("Nome:"));
+        txtNome = new JTextField();
+        painelDados.add(txtNome);
 
-        // --- Botões de Navegação ---
+        painelDados.add(new JLabel("Salário:"));
+        txtSalario = new JTextField();
+        painelDados.add(txtSalario);
+
+        painelDados.add(new JLabel("Cargo:"));
+        txtCargo = new JTextField();
+        painelDados.add(txtCargo);
+
         btnAnterior = new JButton("Anterior");
         btnProximo = new JButton("Próximo");
-        btnAnterior.setEnabled(false);
-        btnProximo.setEnabled(false);
-        navegacao.add(btnAnterior);
-        navegacao.add(btnProximo);
-        pack();
-        setMinimumSize(getSize());
-        setLocationRelativeTo(null);
+        painelDados.add(btnAnterior);
+        painelDados.add(btnProximo);
 
-        // Conectar ao Banco de Dados
-        conectarBD();
+        add(painelDados, BorderLayout.CENTER);
 
-        // --- Eventos ---
+        // Conecta e cria o banco em memória automaticamente
+        conectarEInicializarBanco();
+
+        // Eventos dos botões
         btnPesquisar.addActionListener(e -> pesquisar());
-        btnProximo.addActionListener(e -> navegarProximo());
         btnAnterior.addActionListener(e -> navegarAnterior());
+        btnProximo.addActionListener(e -> navegarProximo());
     }
 
-    private void adicionarCampo(JPanel painel, String texto, JTextField campo, int linha) {
-        JLabel rotulo = new JLabel(texto);
-        rotulo.setLabelFor(campo);
-        GridBagConstraints restricoes = new GridBagConstraints();
-        restricoes.gridx = 0;
-        restricoes.gridy = linha;
-        restricoes.anchor = GridBagConstraints.LINE_START;
-        restricoes.insets = new Insets(8, 8, 8, 12);
-        painel.add(rotulo, restricoes);
-        restricoes.gridx = 1;
-        restricoes.weightx = 1;
-        restricoes.fill = GridBagConstraints.HORIZONTAL;
-        restricoes.insets = new Insets(8, 0, 8, 8);
-        painel.add(campo, restricoes);
-    }
-
-    private void conectarBD() {
+    private void conectarEInicializarBanco() {
         try {
-            // Ajuste a URL, usuário e senha conforme seu ambiente
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=aulajava;encrypt=false;";
-            String usuario = "sa";
-            String senha = "sua_senha";
+            // Para usar no SQL Server real da faculdade depois, basta trocar estas 2 linhas por:
+            // Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            // String url = "jdbc:sqlserver://localhost:1433;databaseName=aulajava;encrypt=false;";
+            
+            Class.forName("org.h2.Driver");
+            String url = "jdbc:h2:mem:aulajava;MODE=MSSQLServer;DB_CLOSE_DELAY=-1";
+            con = DriverManager.getConnection(url, "sa", "");
 
-            conexao = DriverManager.getConnection(url, usuario, senha);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao conectar ao banco: " + e.getMessage());
+            Statement st = con.createStatement();
+
+            // 2. Criação das tabelas conforme o esquema do PDF
+            st.execute("CREATE TABLE tbcargos (" +
+                       "cd_cargo SMALLINT PRIMARY KEY, " +
+                       "ds_cargo CHAR(20))");
+
+            st.execute("CREATE TABLE tbfuncs (" +
+                       "cod_func DECIMAL(9) PRIMARY KEY, " +
+                       "nome_func CHAR(30), " +
+                       "sal_func DECIMAL(10,2), " +
+                       "cod_cargo SMALLINT, " +
+                       "FOREIGN KEY (cod_cargo) REFERENCES tbcargos(cd_cargo))");
+
+            // 3. Inserção de registros respeitando chaves e relacionamento
+            st.execute("INSERT INTO tbcargos VALUES (1, 'Administrativo')");
+            st.execute("INSERT INTO tbcargos VALUES (2, 'Desenvolvedor')");
+            st.execute("INSERT INTO tbcargos VALUES (3, 'Analista')");
+
+            st.execute("INSERT INTO tbfuncs VALUES (1, 'Marcelo', 2000.00, 1)");
+            st.execute("INSERT INTO tbfuncs VALUES (2, 'Marcelo Santos', 3500.00, 2)");
+            st.execute("INSERT INTO tbfuncs VALUES (3, 'Maria Oliveira', 4200.50, 3)");
+            st.execute("INSERT INTO tbfuncs VALUES (4, 'Marcos Silva', 1800.00, 1)");
+            st.execute("INSERT INTO tbfuncs VALUES (5, 'Ana Costa', 5000.00, 2)");
+
+            st.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao iniciar banco: " + ex.getMessage());
         }
     }
 
+    // 5. Botão Pesquisar usando SELECT com LIKE e PreparedStatement
     private void pesquisar() {
-        String nome = txtPesquisa.getText().strip();
-        if (nome.isEmpty()) {
-            informarEntradaInvalida("Informe o nome do funcionário para pesquisar.");
-            return;
-        }
-        if (!nome.matches("[\\p{L}\\p{M} .’'\\-]+")
-                || !nome.matches(".*\\p{L}.*")) {
-            informarEntradaInvalida("Informe um nome com letras. Espaços, pontos, apóstrofos e hífens são permitidos.");
-            return;
-        }
-        txtPesquisa.setText(nome);
         try {
-            if (conexao == null || conexao.isClosed()) {
-                JOptionPane.showMessageDialog(this,
-                    "Conexão com o banco indisponível. Verifique a configuração e reinicie o programa.",
-                    "Pesquisa indisponível", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            limparCampos();
-            // Consulta SQL com JOIN para buscar o nome do cargo
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+
             String sql = "SELECT f.nome_func, f.sal_func, c.ds_cargo " +
                          "FROM tbfuncs f " +
                          "INNER JOIN tbcargos c ON f.cod_cargo = c.cd_cargo " +
-                         "WHERE f.nome_func LIKE ?";
+                         "WHERE LOWER(f.nome_func) LIKE LOWER(?)";
 
             // TYPE_SCROLL_INSENSITIVE permite navegar para frente e para trás no ResultSet
-            PreparedStatement stmt = conexao.prepareStatement(
-                sql,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY
-            );
+            pstmt = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            pstmt.setString(1, "%" + txtPesquisaNome.getText().trim() + "%");
 
-            stmt.setString(1, "%" + nome + "%");
-            rs = stmt.executeQuery();
+            rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                atualizarCampos();
+                exibirRegistroAtual();
             } else {
-                JOptionPane.showMessageDialog(this, "Nenhum registro encontrado.");
-                limparCampos();
+                JOptionPane.showMessageDialog(this, "Nenhum funcionário encontrado.");
+                txtNome.setText("");
+                txtSalario.setText("");
+                txtCargo.setText("");
             }
-        } catch (SQLException e) {
-            limparCampos();
-            JOptionPane.showMessageDialog(this, "Erro na pesquisa: " + e.getMessage());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Erro na pesquisa: " + ex.getMessage());
         }
     }
 
-    private void informarEntradaInvalida(String mensagem) {
-        JOptionPane.showMessageDialog(this, mensagem, "Entrada inválida", JOptionPane.WARNING_MESSAGE);
-        txtPesquisa.requestFocusInWindow();
-        txtPesquisa.selectAll();
-    }
-
-    private void navegarProximo() {
-        try {
-            if (rs != null && rs.next()) {
-                atualizarCampos();
-            } else if (rs != null) {
-                rs.last(); // Permanece no último registro se atingir o fim
-                JOptionPane.showMessageDialog(this, "Você já está no último registro.");
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao navegar: " + e.getMessage());
-        }
-    }
-
+    // 6. Navegação Anterior até o limite inicial
     private void navegarAnterior() {
         try {
-            if (rs != null && rs.previous()) {
-                atualizarCampos();
-            } else if (rs != null) {
-                rs.first(); // Permanece no primeiro registro se atingir o início
-                JOptionPane.showMessageDialog(this, "Você já está no primeiro registro.");
+            if (rs != null) {
+                if (rs.previous()) {
+                    exibirRegistroAtual();
+                } else {
+                    rs.first(); // Mantém posicionado no primeiro registro
+                    JOptionPane.showMessageDialog(this, "Você já está no primeiro registro!");
+                }
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao navegar: " + e.getMessage());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao voltar: " + ex.getMessage());
         }
     }
 
-    private void atualizarCampos() throws SQLException {
-        txtNome.setText(rs.getString("nome_func").trim());
-        txtSalario.setText(String.format("%.2f", rs.getDouble("sal_func")));
-        txtCargo.setText(rs.getString("ds_cargo").trim());
-        btnAnterior.setEnabled(!rs.isFirst());
-        btnProximo.setEnabled(!rs.isLast());
+    // 6. Navegação Próximo até o limite final
+    private void navegarProximo() {
+        try {
+            if (rs != null) {
+                if (rs.next()) {
+                    exibirRegistroAtual();
+                } else {
+                    rs.last(); // Mantém posicionado no último registro
+                    JOptionPane.showMessageDialog(this, "Você já está no último registro!");
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao avançar: " + ex.getMessage());
+        }
     }
 
-    private void limparCampos() {
-        txtNome.setText("");
-        txtSalario.setText("");
-        txtCargo.setText("");
-        btnAnterior.setEnabled(false);
-        btnProximo.setEnabled(false);
+    private void exibirRegistroAtual() throws SQLException {
+        txtNome.setText(rs.getString("nome_func").trim());
+        txtSalario.setText(String.format(Locale.US, "%.2f", rs.getDouble("sal_func")));
+        txtCargo.setText(rs.getString("ds_cargo").trim());
     }
 
     public static void main(String[] args) {
